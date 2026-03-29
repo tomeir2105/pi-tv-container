@@ -1469,26 +1469,32 @@ body.fullscreen-mode .sleep-screen {
 
 @media (max-width: 980px) {
   body {
-    overflow: auto;
+    overflow: hidden;
   }
 
   .tv-shell {
-    min-height: 100%;
+    height: 100dvh;
+    min-height: 100dvh;
     align-items: flex-start;
+    padding: 10px;
   }
 
   .tv-cabinet {
     grid-template-columns: 1fr;
-    height: auto;
-    min-height: calc(100vh - 24px);
+    grid-template-rows: minmax(0, 1fr) auto;
+    height: 100%;
+    min-height: 0;
+    gap: 10px;
+    padding: 10px;
   }
 
   .bezel {
-    min-height: 52vh;
+    min-height: 0;
   }
 
   .control-panel {
-    min-height: 250px;
+    min-height: 0;
+    max-height: min(30dvh, 240px);
     padding: 4px 6px 6px;
     gap: 2px;
   }
@@ -1505,19 +1511,23 @@ body.fullscreen-mode .sleep-screen {
   }
 
   .channel-number {
-    font-size: 0.72rem;
+    font-size: 0.96rem;
     line-height: 1;
   }
 
   .news-icon,
   .weather-nav-icon,
   .camera-channel-icon {
-    width: 1.05rem;
-    height: 1.05rem;
+    width: 1.32rem;
+    height: 1.32rem;
   }
 
   .setup-icon {
-    font-size: 1rem;
+    font-size: 1.28rem;
+  }
+
+  .emergency-nav-btn .channel-number {
+    font-size: 1.45rem;
   }
 
   .dial-cluster {
@@ -1549,9 +1559,16 @@ body.fullscreen-mode .sleep-screen {
     font-size: 1.2rem;
   }
 
+  .fullscreen-dial .dial-icon {
+    width: 100%;
+    text-align: center;
+    font-size: 0.82rem;
+    transform: translateY(-1px);
+  }
+
   .mute-dial-icon {
-    width: 0.75rem;
-    height: 0.75rem;
+    width: 1rem;
+    height: 1rem;
   }
 
   .channel-panel,
