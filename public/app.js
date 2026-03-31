@@ -26,6 +26,9 @@ const emergencyGrid = document.getElementById('emergencyGrid');
 const emergencyEmpty = document.getElementById('emergencyEmpty');
 const standbyScreen = document.getElementById('standbyScreen');
 const sleepScreen = document.getElementById('sleepScreen');
+const powerOffScreen = document.getElementById('powerOffScreen');
+const powerOffQrMover = document.getElementById('powerOffQrMover');
+const powerOffQrImage = document.getElementById('powerOffQrImage');
 const weatherCitySelect = document.getElementById('weatherCitySelect');
 const weatherPanelCitySelect = document.getElementById('weatherPanelCitySelect');
 const weatherCityTitle = document.getElementById('weatherCityTitle');
@@ -63,6 +66,8 @@ const player = document.getElementById('player');
 const volumeDial = document.getElementById('volumeDial');
 const remoteQrImage = document.getElementById('remoteQrImage');
 const remoteQrLink = document.getElementById('remoteQrLink');
+const sleepQrMover = document.getElementById('sleepQrMover');
+const sleepQrImage = document.getElementById('sleepQrImage');
 
 let hls = null;
 let channelsById = new Map();
@@ -102,6 +107,10 @@ let lastActivityAt = Date.now();
 let isIdleDarkMode = false;
 let mutedBeforeIdleDarkMode = null;
 let lastLocalActivityPingAt = 0;
+let powerOffQrAnimationFrame = null;
+let powerOffQrLastFrameAt = 0;
+let powerOffQrPosition = { x: 0, y: 0 };
+let powerOffQrVelocity = { x: 0, y: 0 };
 let alertsNewsScrollFrame = null;
 let alertsNewsScrollTimeout = null;
 let alertsRefreshIntervalMs = 15000;
@@ -124,6 +133,8 @@ let alertsNewsScrollDirection = 'down';
 let clientDiagnosticsEnabled = false;
 let setupConfigLoaded = false;
 const WEATHER_AUTOSCROLL_PX_PER_SECOND = 26;
+const SLEEP_QR_MIN_SPEED_PX_PER_SECOND = 18;
+const SLEEP_QR_MAX_SPEED_PX_PER_SECOND = 30;
 const CLIENT_SESSION_ID = `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
 const diagnosticsRateLimit = new Map();
 const VOLUME_STORAGE_KEY = 'tv-volume';
@@ -275,6 +286,16 @@ function updateRemoteLink(remoteUrl) {
   if (remoteQrImage) {
     remoteQrImage.alt = `QR code for the remote control at ${resolvedUrl}`;
     remoteQrImage.src = `/api/remote-qr?t=${Date.now()}`;
+  }
+
+  if (sleepQrImage) {
+    sleepQrImage.alt = `QR code for the remote control at ${resolvedUrl}`;
+    sleepQrImage.src = `/api/remote-qr?t=${Date.now()}`;
+  }
+
+  if (powerOffQrImage) {
+    powerOffQrImage.alt = `QR code for the remote control at ${resolvedUrl}`;
+    powerOffQrImage.src = `/api/remote-qr?t=${Date.now()}`;
   }
 
   if (remoteQrLink) {
@@ -1037,14 +1058,150 @@ function showStandbyScreen(show) {
   standbyScreen.classList.toggle('hidden', !show);
 }
 
+function showPowerOffScreen(show) {
+  if (!powerOffScreen) {
+    return;
+  }
+
+  powerOffScreen.classList.toggle('hidden', !show);
+
+  if (show) {
+    startPowerOffQrMotion();
+    return;
+  }
+
+  stopPowerOffQrMotion();
+}
+
 function showSleepScreen(show) {
   if (!sleepScreen) return;
   sleepScreen.classList.toggle('hidden', !show);
 }
 
+function randomBetween(min, max) {
+  return min + Math.random() * (max - min);
+}
+
+function createSleepQrVelocity(horizontalDirection = Math.random() < 0.5 ? -1 : 1, verticalDirection = Math.random() < 0.5 ? -1 : 1) {
+  const speed = randomBetween(SLEEP_QR_MIN_SPEED_PX_PER_SECOND, SLEEP_QR_MAX_SPEED_PX_PER_SECOND);
+  const horizontalWeight = randomBetween(0.45, 1);
+  const verticalWeight = randomBetween(0.45, 1);
+  const magnitude = Math.hypot(horizontalWeight, verticalWeight) || 1;
+
+  return {
+    x: (horizontalDirection * speed * horizontalWeight) / magnitude,
+    y: (verticalDirection * speed * verticalWeight) / magnitude
+  };
+}
+
+function applyPowerOffQrPosition() {
+  if (!powerOffQrMover) {
+    return;
+  }
+
+  powerOffQrMover.style.transform = `translate(${powerOffQrPosition.x}px, ${powerOffQrPosition.y}px)`;
+}
+
+function resetPowerOffQrMotion() {
+  if (!powerOffScreen || !powerOffQrMover) {
+    return;
+  }
+
+  const maxX = Math.max(0, powerOffScreen.clientWidth - powerOffQrMover.offsetWidth);
+  const maxY = Math.max(0, powerOffScreen.clientHeight - powerOffQrMover.offsetHeight);
+
+  powerOffQrPosition = {
+    x: maxX > 0 ? Math.random() * maxX : 0,
+    y: maxY > 0 ? Math.random() * maxY : 0
+  };
+  powerOffQrVelocity = createSleepQrVelocity();
+  applyPowerOffQrPosition();
+}
+
+function stopPowerOffQrMotion() {
+  if (powerOffQrAnimationFrame) {
+    window.cancelAnimationFrame(powerOffQrAnimationFrame);
+    powerOffQrAnimationFrame = null;
+  }
+
+  powerOffQrLastFrameAt = 0;
+}
+
+function stepPowerOffQrMotion(timestamp) {
+  if (currentPlayback !== 'stopped' || !powerOffScreen || !powerOffQrMover) {
+    stopPowerOffQrMotion();
+    return;
+  }
+
+  if (!powerOffQrLastFrameAt) {
+    powerOffQrLastFrameAt = timestamp;
+  }
+
+  const deltaSeconds = Math.min((timestamp - powerOffQrLastFrameAt) / 1000, 0.05);
+  powerOffQrLastFrameAt = timestamp;
+
+  const maxX = Math.max(0, powerOffScreen.clientWidth - powerOffQrMover.offsetWidth);
+  const maxY = Math.max(0, powerOffScreen.clientHeight - powerOffQrMover.offsetHeight);
+
+  powerOffQrPosition.x += powerOffQrVelocity.x * deltaSeconds;
+  powerOffQrPosition.y += powerOffQrVelocity.y * deltaSeconds;
+
+  let hitHorizontalEdge = false;
+  let hitVerticalEdge = false;
+
+  if (powerOffQrPosition.x <= 0) {
+    powerOffQrPosition.x = 0;
+    hitHorizontalEdge = true;
+  } else if (powerOffQrPosition.x >= maxX) {
+    powerOffQrPosition.x = maxX;
+    hitHorizontalEdge = true;
+  }
+
+  if (powerOffQrPosition.y <= 0) {
+    powerOffQrPosition.y = 0;
+    hitVerticalEdge = true;
+  } else if (powerOffQrPosition.y >= maxY) {
+    powerOffQrPosition.y = maxY;
+    hitVerticalEdge = true;
+  }
+
+  if (hitHorizontalEdge || hitVerticalEdge) {
+    const horizontalDirection = hitHorizontalEdge ? (powerOffQrPosition.x <= 0 ? 1 : -1) : (Math.sign(powerOffQrVelocity.x) || 1);
+    const verticalDirection = hitVerticalEdge ? (powerOffQrPosition.y <= 0 ? 1 : -1) : (Math.sign(powerOffQrVelocity.y) || 1);
+    powerOffQrVelocity = createSleepQrVelocity(horizontalDirection, verticalDirection);
+  }
+
+  applyPowerOffQrPosition();
+  powerOffQrAnimationFrame = window.requestAnimationFrame(stepPowerOffQrMotion);
+}
+
+function startPowerOffQrMotion() {
+  if (!powerOffScreen || !powerOffQrMover) {
+    return;
+  }
+
+  if (powerOffQrAnimationFrame) {
+    window.cancelAnimationFrame(powerOffQrAnimationFrame);
+  }
+
+  const startAnimation = () => {
+    resetPowerOffQrMotion();
+    powerOffQrLastFrameAt = 0;
+    powerOffQrAnimationFrame = window.requestAnimationFrame(stepPowerOffQrMotion);
+  };
+
+  if (!powerOffQrMover.offsetWidth || !powerOffQrMover.offsetHeight) {
+    window.requestAnimationFrame(startAnimation);
+    return;
+  }
+
+  startAnimation();
+}
+
 function updateScreenOverlays(playback = currentPlayback) {
   document.body.classList.toggle('power-off-mode', playback === 'stopped');
-  showStandbyScreen(false);
+  showStandbyScreen(playback === 'stopped');
+  showPowerOffScreen(playback === 'stopped');
   showSleepScreen(playback !== 'stopped' && isIdleDarkMode);
 }
 
@@ -2288,10 +2445,17 @@ function setupIdleDarkMode() {
 
   document.addEventListener('visibilitychange', () => {
     if (!document.hidden) {
+      registerLocalActivity();
       setVolume(currentVolume, { showStatus: false, sync: false });
     }
     if (!document.hidden && currentMode === 'channel' && currentPlayback === 'playing' && player.paused) {
       schedulePlaybackRetry(80);
+    }
+  });
+
+  window.addEventListener('resize', () => {
+    if (currentPlayback === 'stopped') {
+      resetPowerOffQrMotion();
     }
   });
 }

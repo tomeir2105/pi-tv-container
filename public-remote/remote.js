@@ -11,6 +11,7 @@ const refreshButton = document.getElementById('refreshButton');
 const backButton = document.getElementById('backButton');
 const powerButton = document.getElementById('powerButton');
 const audioRedirectButton = document.getElementById('audioRedirectButton');
+const audioResetButton = document.getElementById('audioResetButton');
 const beepButton = document.getElementById('beepButton');
 const audioRedirectPlayer = document.getElementById('audioRedirectPlayer');
 const weatherCitySelect = document.getElementById('weatherCitySelect');
@@ -270,6 +271,26 @@ async function triggerPiBeep() {
   }
 
   return response.json();
+}
+
+async function resetPiAudio() {
+  const response = await fetch('/api/audio/reset', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' }
+  });
+
+  let payload = null;
+  try {
+    payload = await response.json();
+  } catch (_error) {
+    payload = null;
+  }
+
+  if (!response.ok) {
+    throw new Error(payload?.error || 'Audio reset failed');
+  }
+
+  return payload;
 }
 
 async function runBeepOnce() {
@@ -571,6 +592,26 @@ async function init() {
 
     setAudioRedirectEnabled(true);
     await syncAudioRedirect(currentControlState);
+    closeMenu();
+  });
+
+  audioResetButton.addEventListener('click', async () => {
+    try {
+      const result = await resetPiAudio();
+      const summary = String(result?.output || '')
+        .split('\n')
+        .map((line) => line.trim())
+        .find((line) => line.startsWith('sink_description='));
+
+      if (summary) {
+        setStatus(`Audio reset: ${summary.replace('sink_description=', '')}`);
+      } else {
+        setStatus('Audio reset complete');
+      }
+    } catch (error) {
+      setStatus(error?.message || 'Audio reset failed');
+    }
+
     closeMenu();
   });
 

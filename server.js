@@ -14,6 +14,7 @@ const tvPort = Number(process.env.PORT || 3000);
 const remotePort = Number(process.env.REMOTE_PORT || 3001);
 const remoteControlUrl = String(process.env.REMOTE_CONTROL_URL || '').trim();
 const kioskRestartScriptPath = path.join(__dirname, 'scripts', 'restart-kiosk-browser.sh');
+const audioResetScriptPath = path.join(__dirname, 'scripts', 'reset-audio.sh');
 const logsDirPath = path.join(__dirname, 'logs');
 const dataDirPath = path.join(__dirname, 'data');
 const settingsFilePath = path.join(dataDirPath, 'settings.json');
@@ -590,6 +591,31 @@ function runDetachedCommand(command, args = []) {
     child.on('error', reject);
     child.on('close', (code) => {
       resolve(code);
+    });
+  });
+}
+
+function runCommand(command, args = [], options = {}) {
+  return new Promise((resolve, reject) => {
+    const child = spawn(command, args, {
+      ...options,
+      stdio: ['ignore', 'pipe', 'pipe']
+    });
+
+    let stdout = '';
+    let stderr = '';
+
+    child.stdout.on('data', (chunk) => {
+      stdout += chunk.toString();
+    });
+
+    child.stderr.on('data', (chunk) => {
+      stderr += chunk.toString();
+    });
+
+    child.on('error', reject);
+    child.on('close', (code) => {
+      resolve({ code, stdout, stderr });
     });
   });
 }
@@ -2014,6 +2040,52 @@ function registerApiRoutes(app, appName) {
         message: error?.message || String(error)
       });
       return res.status(500).json({ error: 'Failed to play beep' });
+    }
+  });
+
+  app.post('/api/audio/reset', async (_req, res) => {
+    logServerEvent('info', 'audio_reset_requested', { app: appName });
+
+    if (!fs.existsSync(audioResetScriptPath)) {
+      logServerEvent('error', 'audio_reset_script_missing', {
+        app: appName,
+        audioResetScriptPath
+      });
+      return res.status(404).json({ error: 'Audio reset script not found' });
+    }
+
+    try {
+      const result = await runCommand('bash', [audioResetScriptPath], {
+        env: process.env
+      });
+
+      const details = {
+        app: appName,
+        code: result.code,
+        stdout: result.stdout.trim(),
+        stderr: result.stderr.trim()
+      };
+
+      if (result.code !== 0) {
+        logServerEvent('error', 'audio_reset_failed', details);
+        return res.status(500).json({
+          error: 'Audio reset failed',
+          stdout: details.stdout,
+          stderr: details.stderr
+        });
+      }
+
+      logServerEvent('info', 'audio_reset_completed', details);
+      return res.json({
+        ok: true,
+        output: details.stdout
+      });
+    } catch (error) {
+      logServerEvent('error', 'audio_reset_failed', {
+        app: appName,
+        message: error?.message || String(error)
+      });
+      return res.status(500).json({ error: 'Audio reset failed' });
     }
   });
 

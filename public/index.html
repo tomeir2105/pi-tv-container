@@ -12,6 +12,18 @@
   </head>
   <body>
     <div class="room-glow" aria-hidden="true"></div>
+    <div class="power-off-screen hidden" id="powerOffScreen">
+      <div class="power-off-qr-bouncer" id="powerOffQrMover" aria-hidden="true">
+        <img
+          class="power-off-qr-image"
+          id="powerOffQrImage"
+          src="/api/remote-qr"
+          alt="QR code for the remote control"
+          width="160"
+          height="160"
+        />
+      </div>
+    </div>
 
     <main class="tv-shell">
       <section class="tv-cabinet" aria-label="Old TV cabinet">
@@ -250,14 +262,19 @@
               </div>
             </div>
 
-            <div class="standby-screen hidden" id="standbyScreen">
-              <div class="standby-label">TV Stopped</div>
-              <div class="standby-hint">Press Start on the remote to resume.</div>
-            </div>
+            <div class="standby-screen hidden" id="standbyScreen"></div>
 
             <div class="sleep-screen hidden" id="sleepScreen">
-              <div class="sleep-label">Dark Mode</div>
-              <div class="sleep-hint">Press any remote button or tap a key to wake the TV.</div>
+              <div class="sleep-qr-bouncer" id="sleepQrMover" aria-hidden="true">
+                <img
+                  class="sleep-qr-image"
+                  id="sleepQrImage"
+                  src="/api/remote-qr"
+                  alt="QR code for the remote control"
+                  width="160"
+                  height="160"
+                />
+              </div>
             </div>
           </div>
         </div>

@@ -701,52 +701,62 @@ body.fullscreen-mode .sleep-screen {
 }
 
 .standby-screen {
-  display: grid;
-  place-items: center;
-  align-content: center;
-  gap: 14px;
-  padding: 24px;
-  text-align: center;
-  background:
-    radial-gradient(circle at center, rgba(111, 215, 255, 0.08), transparent 36%),
-    radial-gradient(circle at 50% 50%, rgba(0, 0, 0, 0.35), rgba(0, 0, 0, 0.88));
+  z-index: 4;
+  background: #000;
 }
 
 .sleep-screen {
   z-index: 4;
-  display: grid;
-  place-items: center;
-  align-content: center;
-  gap: 14px;
-  padding: 24px;
-  text-align: center;
-  background:
-    radial-gradient(circle at center, rgba(255, 188, 89, 0.05), transparent 20%),
-    linear-gradient(180deg, rgba(4, 6, 10, 0.96), rgba(0, 0, 0, 0.995));
+  overflow: hidden;
+  background: #000;
 }
 
-.standby-label {
-  font-family: 'Special Elite', serif;
-  font-size: clamp(2rem, 5vw, 4rem);
-  color: var(--amber);
-  letter-spacing: 2px;
+.power-off-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  overflow: hidden;
+  background: #000;
 }
 
-.sleep-label {
-  font-family: 'Special Elite', serif;
-  font-size: clamp(2rem, 5vw, 4rem);
-  color: rgba(255, 238, 197, 0.92);
-  letter-spacing: 2px;
+.power-off-qr-bouncer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: clamp(132px, 18vw, 184px);
+  pointer-events: none;
+  will-change: transform;
 }
 
-.standby-hint {
-  color: rgba(215, 246, 255, 0.75);
-  font-size: clamp(0.95rem, 2vw, 1.25rem);
+.power-off-qr-image {
+  display: block;
+  width: 100%;
+  height: auto;
+  padding: 8px;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 0 18px rgba(255, 255, 255, 0.14);
+  image-rendering: pixelated;
 }
 
-.sleep-hint {
-  color: rgba(255, 249, 230, 0.62);
-  font-size: clamp(0.95rem, 2vw, 1.15rem);
+.sleep-qr-bouncer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: clamp(132px, 18vw, 184px);
+  pointer-events: none;
+  will-change: transform;
+}
+
+.sleep-qr-image {
+  display: block;
+  width: 100%;
+  height: auto;
+  padding: 8px;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 0 18px rgba(255, 255, 255, 0.14);
+  image-rendering: pixelated;
 }
 
 .weather-layout {

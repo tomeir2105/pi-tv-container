@@ -14,7 +14,12 @@ AUDIO_VOLUME="${AUDIO_VOLUME:-1.0}"
 KIOSK_LOG_PATH="${KIOSK_LOG_PATH:-/tmp/kiosk-browser.log}"
 KIOSK_URL_WAIT_SECONDS="${KIOSK_URL_WAIT_SECONDS:-30}"
 KIOSK_FOREGROUND="${KIOSK_FOREGROUND:-0}"
-CHROMIUM_EXTRA_FLAGS="${CHROMIUM_EXTRA_FLAGS:---disable-gpu --disable-gpu-rasterization --disable-accelerated-video-decode --disable-accelerated-2d-canvas --disable-features=UseSkiaRenderer,Vulkan}"
+# Reduce Chromium background services that trigger startup token/registration
+# requests unrelated to kiosk playback.
+KIOSK_BASE_FLAGS="${KIOSK_BASE_FLAGS:---disable-background-networking --disable-component-update --disable-sync --metrics-recording-only --disable-default-apps --disable-features=MediaRouter}"
+# Leave Chromium feature selection to platform defaults unless explicitly
+# overridden by CHROMIUM_EXTRA_FLAGS in the environment.
+CHROMIUM_EXTRA_FLAGS="${CHROMIUM_EXTRA_FLAGS:-}"
 ALSA_CONFIG_PATH_VALUE="${ALSA_CONFIG_PATH:-$PROJECT_ROOT/config/asoundrc}"
 KIOSK_PROFILE_DIR="${KIOSK_PROFILE_DIR:-/tmp/kiosk-chromium-profile}"
 
@@ -32,6 +37,9 @@ fi
 export DISPLAY="$DISPLAY_VALUE"
 export XAUTHORITY="$XAUTHORITY_VALUE"
 export DBUS_SESSION_BUS_ADDRESS="${DBUS_SESSION_BUS_ADDRESS:-}"
+# Force Chromium to use a basic password store and avoid desktop keyring
+# prompts during kiosk startup.
+export CHROME_PASSWORD_STORE="${CHROME_PASSWORD_STORE:-basic}"
 
 mkdir -p "$KIOSK_PROFILE_DIR"
 
@@ -109,11 +117,12 @@ set -- "$CHROMIUM_BIN" \
   --noerrdialogs \
   --disable-infobars \
   --password-store=basic \
+  --use-mock-keychain \
   --user-data-dir="$KIOSK_PROFILE_DIR" \
   "$URL"
 
 # shellcheck disable=SC2086
-set -- "$@" $CHROMIUM_EXTRA_FLAGS
+set -- "$@" $KIOSK_BASE_FLAGS $CHROMIUM_EXTRA_FLAGS
 
 if [ "$KIOSK_FOREGROUND" = "1" ]; then
   log "Launching Chromium in foreground with $CHROMIUM_BIN"
