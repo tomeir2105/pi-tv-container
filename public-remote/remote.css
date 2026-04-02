@@ -54,9 +54,10 @@ body {
   position: relative;
   display: grid;
   grid-template-columns: minmax(0, 1fr) 82px;
-  gap: 10px;
+  gap: 4px;
   padding: 18px 18px 22px;
   border-radius: 42px;
+  align-items: start;
   background:
     radial-gradient(circle at 50% 0%, rgba(255, 255, 255, 0.08), transparent 22%),
     linear-gradient(180deg, var(--shell-top), var(--shell-mid) 40%, var(--shell-bottom));
@@ -84,7 +85,7 @@ body {
 .remote-side {
   display: flex;
   flex-direction: column;
-  align-items: flex-end;
+  align-items: center;
 }
 
 .remote-header {
@@ -166,12 +167,21 @@ body {
 .menu-cap {
   position: relative;
   z-index: 7;
-  width: 100%;
-  min-width: 0;
-  height: 44px;
-  min-height: 44px;
-  flex: 1 1 auto;
-  border-radius: 16px;
+  width: 42px;
+  height: 42px;
+  min-width: 42px;
+  min-height: 42px;
+  padding: 0;
+  flex: 0 0 42px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  color: #eef4ff;
+  background: linear-gradient(180deg, var(--olive-top), var(--olive-bottom));
+  box-shadow:
+    inset 0 1px 1px rgba(255, 255, 255, 0.16),
+    inset 0 -2px 3px rgba(0, 0, 0, 0.28),
+    0 10px 14px var(--key-shadow);
 }
 
 .menu-icon {
@@ -187,12 +197,6 @@ body {
   height: 2.5px;
   border-radius: 999px;
   background: currentColor;
-}
-
-.remote-camera-icon svg {
-  display: block;
-  width: 20px;
-  height: 20px;
 }
 
 .menu-backdrop {
@@ -717,14 +721,20 @@ body {
 }
 
 .remote-news-icon,
-.remote-weather-icon {
+.remote-weather-icon,
+.remote-camera-icon {
   width: 2.15rem;
   height: 2.15rem;
   margin: 0 auto;
+  font-size: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .remote-news-icon svg,
-.remote-weather-icon svg {
+.remote-weather-icon svg,
+.remote-camera-icon svg {
   display: block;
   width: 100%;
   height: 100%;
@@ -799,8 +809,9 @@ body {
 }
 
 .volume-head {
-  display: grid;
-  justify-items: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   gap: 10px;
   margin-bottom: 14px;
 }
@@ -821,6 +832,7 @@ body {
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
   font-size: 0.92rem;
   font-weight: 700;
+  margin-top: 10px;
 }
 
 .mute-toggle {
@@ -867,9 +879,11 @@ body {
 
 .volume-panel {
   display: flex;
-  flex: 1;
+  flex: 0 0 auto;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
+  width: 52px;
 }
 
 .volume-rail {
@@ -877,12 +891,12 @@ body {
   grid-template-rows: auto 1fr auto;
   align-items: center;
   justify-items: center;
-  gap: 12px;
+  gap: 8px;
   width: 100%;
   height: 100%;
   min-height: 360px;
-  padding: 16px 12px;
-  border-radius: 28px;
+  padding: 12px 6px;
+  border-radius: 18px;
   background: linear-gradient(180deg, #171c23, #0d1015);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.05),
@@ -911,7 +925,7 @@ body {
   flex-direction: column;
   align-items: center;
   padding: 10px 6px;
-  margin-top: 12px;
+  margin-top: 2px;
 }
 
 #statusText {

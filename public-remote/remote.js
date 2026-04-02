@@ -43,8 +43,8 @@ function getRemoteChannelMarkup(channel) {
     return `
       <span class="channel-number remote-camera-icon" aria-hidden="true">
         <svg viewBox="0 0 24 24" focusable="false">
-          <rect x="4.5" y="7" width="10.5" height="10" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"></rect>
-          <path d="M15 10.2l4.5-2.4v8.4L15 13.8z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"></path>
+          <rect x="2" y="5" width="14" height="12" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"></rect>
+          <path d="M17 7.5l5-3v13l-5-3z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"></path>
         </svg>
       </span>
     `;

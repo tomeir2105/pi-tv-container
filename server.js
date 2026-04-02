@@ -246,6 +246,79 @@ function savePersistedSettings(nextSettings) {
   weatherGeocodeCache.clear();
 }
 
+function getPersistedControlState() {
+  const persistedControlState =
+    getCurrentSettings().controlState &&
+    typeof getCurrentSettings().controlState === 'object' &&
+    !Array.isArray(getCurrentSettings().controlState)
+      ? getCurrentSettings().controlState
+      : {};
+
+  const nextState = {};
+
+  if (persistedControlState.mode === 'channel' || persistedControlState.mode === 'weather') {
+    nextState.mode = persistedControlState.mode;
+  }
+
+  if (typeof persistedControlState.channelId === 'string' && getChannels().some((channel) => channel.id === persistedControlState.channelId)) {
+    nextState.channelId = persistedControlState.channelId;
+  }
+
+  if (
+    typeof persistedControlState.weatherCityId === 'string' &&
+    getWeatherCities().some((city) => city.id === persistedControlState.weatherCityId)
+  ) {
+    nextState.weatherCityId = persistedControlState.weatherCityId;
+  }
+
+  if (typeof persistedControlState.fullscreen === 'boolean') {
+    nextState.fullscreen = persistedControlState.fullscreen;
+  }
+
+  if (
+    persistedControlState.playback === 'playing' ||
+    persistedControlState.playback === 'paused' ||
+    persistedControlState.playback === 'stopped'
+  ) {
+    nextState.playback = persistedControlState.playback;
+  }
+
+  if (persistedControlState.weatherAutoscroll === 'playing' || persistedControlState.weatherAutoscroll === 'paused') {
+    nextState.weatherAutoscroll = persistedControlState.weatherAutoscroll;
+  }
+
+  if (typeof persistedControlState.volume === 'number' && Number.isFinite(persistedControlState.volume)) {
+    nextState.volume = Math.max(0, Math.min(100, Math.round(persistedControlState.volume)));
+  }
+
+  if (typeof persistedControlState.lastVolume === 'number' && Number.isFinite(persistedControlState.lastVolume)) {
+    nextState.lastVolume = Math.max(0, Math.min(100, Math.round(persistedControlState.lastVolume)));
+  }
+
+  if (typeof persistedControlState.muted === 'boolean') {
+    nextState.muted = persistedControlState.muted;
+  }
+
+  return nextState;
+}
+
+function persistControlStateSnapshot(state) {
+  savePersistedSettings({
+    ...getCurrentSettings(),
+    controlState: {
+      mode: state.mode,
+      channelId: state.channelId,
+      weatherCityId: state.weatherCityId,
+      fullscreen: state.fullscreen,
+      playback: state.playback,
+      weatherAutoscroll: state.weatherAutoscroll,
+      volume: state.volume,
+      lastVolume: state.lastVolume,
+      muted: state.muted
+    }
+  });
+}
+
 function getWeatherCitiesConfig() {
   const rawValue = String(process.env.WEATHER_CITIES || '').trim();
   return parseWeatherCitiesConfig(rawValue);
@@ -927,7 +1000,7 @@ process.on('SIGTERM', () => {
   process.exit(0);
 });
 
-let controlState = {
+const defaultControlState = {
   mode: 'channel',
   channelId: getDefaultChannelId(),
   weatherCityId: getDefaultWeatherCityId(),
@@ -939,6 +1012,13 @@ let controlState = {
   muted: false,
   refreshRequestedAt: 0,
   browserBackRequestedAt: 0,
+  updatedAt: Date.now(),
+  source: 'server'
+};
+
+let controlState = {
+  ...defaultControlState,
+  ...getPersistedControlState(),
   updatedAt: Date.now(),
   source: 'server'
 };
@@ -1557,6 +1637,7 @@ function updateControlState(nextState, source = 'unknown') {
       }
   });
 
+  persistControlStateSnapshot(controlState);
   broadcastControlState();
   return controlState;
 }
@@ -1796,6 +1877,7 @@ function registerApiRoutes(app, appName) {
         controlState.weatherCityId = getDefaultWeatherCityId();
       }
       controlState.updatedAt = Date.now();
+      persistControlStateSnapshot(controlState);
 
       res.json({ ok: true, config: buildSetupConfigResponse() });
     } catch (error) {

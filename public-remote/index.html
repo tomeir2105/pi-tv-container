@@ -69,23 +69,32 @@
         </div>
 
         <aside class="remote-side" aria-label="Volume control">
-          <section class="remote-section display-cluster">
-            <div class="menu-wrap side-actions">
-            <button
-              id="menuButton"
-              class="btn utility-cap menu-cap"
-              type="button"
-              aria-label="Open menu"
-              aria-expanded="false"
-              aria-controls="remoteMenu"
-              title="Open menu"
-            >
-              <span class="menu-icon" aria-hidden="true">
-                <span></span>
-                <span></span>
-                <span></span>
-              </span>
-            </button>
+          <section class="remote-section volume-cluster">
+            <div class="volume-head">
+              <button
+                id="menuButton"
+                class="btn menu-cap"
+                type="button"
+                aria-label="Open menu"
+                aria-expanded="false"
+                aria-controls="remoteMenu"
+                title="Open menu"
+              >
+                <span class="menu-icon" aria-hidden="true">
+                  <span></span>
+                  <span></span>
+                  <span></span>
+                </span>
+              </button>
+              <button id="muteButtonRemote" class="btn mute-toggle" type="button" aria-label="Mute audio" title="Mute audio">
+                <span class="mute-toggle-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" focusable="false">
+                    <path d="M4 14h3.4l4.2 3.8V6.2L7.4 10H4z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"></path>
+                    <path d="M15.2 9.2l4.6 5.6M19.8 9.2l-4.6 5.6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path>
+                  </svg>
+                </span>
+              </button>
+            </div>
             <button id="menuBackdrop" class="menu-backdrop" type="button" hidden aria-label="Close menu"></button>
             <div id="remoteMenu" class="remote-menu" hidden>
               <button id="powerButton" class="btn menu-item power-item" type="button" aria-label="Turn screen off" title="Turn screen off">
@@ -126,27 +135,13 @@
                 <span class="menu-item-label">Beep</span>
               </button>
             </div>
-            </div>
-          </section>
-          <section class="remote-section volume-cluster">
-            <div class="volume-head">
-              <div class="section-label">Volume</div>
-              <div id="volumeLabel" title="Volume level">70%</div>
-              <button id="muteButtonRemote" class="btn mute-toggle" type="button" aria-label="Mute audio" title="Mute audio">
-                <span class="mute-toggle-icon" aria-hidden="true">
-                  <svg viewBox="0 0 24 24" focusable="false">
-                    <path d="M4 14h3.4l4.2 3.8V6.2L7.4 10H4z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"></path>
-                    <path d="M15.2 9.2l4.6 5.6M19.8 9.2l-4.6 5.6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path>
-                  </svg>
-                </span>
-              </button>
-            </div>
             <div class="volume-panel">
               <div class="volume-rail">
                 <span class="volume-mark volume-up">+</span>
                 <input id="volumeSlider" type="range" min="0" max="100" step="1" value="70" title="Volume" aria-label="Volume" />
                 <span class="volume-mark volume-down">-</span>
               </div>
+              <div id="volumeLabel" title="Volume level">70%</div>
             </div>
           </section>
         </aside>
